@@ -79,6 +79,57 @@ Build the TypeScript code:
 npm run build
 ```
 
+## Using with MCP
+
+This server can be used with any MCP-compatible client, including AI assistants like Claude. To use it:
+
+1. Build the server:
+   ```bash
+   npm run build
+   ```
+
+2. Set up your environment variables in `.env`
+
+3. Start the server:
+   ```bash
+   npm start
+   ```
+
+4. Connect to the server using an MCP client. The server will provide access to database resources and the query tool.
+
+### Example MCP Interactions
+
+1. List all tables and views:
+   ```json
+   {
+     "type": "list_resources",
+     "params": {}
+   }
+   ```
+
+2. Get table schema:
+   ```json
+   {
+     "type": "read_resource",
+     "params": {
+       "uri": "redshift://your-cluster/schema/table"
+     }
+   }
+   ```
+
+3. Execute a query:
+   ```json
+   {
+     "type": "call_tool",
+     "params": {
+       "name": "query",
+       "arguments": {
+         "sql": "SELECT * FROM schema.table LIMIT 5"
+       }
+     }
+   }
+   ```
+
 ## Development
 
 ### Project Structure
@@ -108,4 +159,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request 
+5. Open a Pull Request
+
+## Acknowledgments
+
+This project is based on the [PostgreSQL MCP server](https://github.com/modelcontextprotocol/servers/tree/main/src/postgres) from the Model Context Protocol project. Special thanks to the original authors for their work. 
