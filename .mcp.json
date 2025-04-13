@@ -1,12 +1,8 @@
 {
-  "name": "redshift",
-  "description": "MCP Server for Amazon Redshift",
-  "version": "0.1.0",
-  "servers": [
-    {
-      "name": "redshift",
+  "mcpServers": {
+    "redshift": {
       "command": "node",
-      "args": ["dist/index.js"],
+      "args": ["./mcp-server-redshift/dist/index.js"],
       "env": {
         "REDSHIFT_HOST": "${REDSHIFT_HOST}",
         "REDSHIFT_PORT": "${REDSHIFT_PORT}",
@@ -16,5 +12,5 @@
         "REDSHIFT_SCHEMAS": "${REDSHIFT_SCHEMAS}"
       }
     }
-  ]
-} 
+  }
+}
