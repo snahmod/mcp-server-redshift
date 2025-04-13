@@ -43,17 +43,33 @@ A Model Context Protocol (MCP) server implementation for Amazon Redshift, allowi
    REDSHIFT_USER=your_username
    REDSHIFT_PASSWORD=your_password
    REDSHIFT_SCHEMAS=public,schema1,schema2
+   
+   # Transport configuration (optional)
+   TRANSPORT_TYPE=stdio  # or 'sse'
+   PORT=3000            # Only used with SSE transport
    ```
 
 ## Usage
 
 ### Starting the Server
 
-```bash
-npm start
-```
+The server supports two transport types:
 
-The server will start and listen for MCP client connections.
+1. stdio (default):
+   ```bash
+   npm start
+   # or explicitly
+   TRANSPORT_TYPE=stdio npm start
+   ```
+
+2. SSE (Server-Sent Events):
+   ```bash
+   TRANSPORT_TYPE=sse PORT=3000 npm start
+   ```
+
+When using SSE transport, the server exposes two endpoints:
+- `GET /sse` - Establishes an SSE connection
+- `POST /messages` - Handles MCP messages
 
 ### Testing
 
