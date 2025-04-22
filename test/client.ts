@@ -1,6 +1,5 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { spawn, ChildProcess } from "child_process";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import { config } from "dotenv";
@@ -45,16 +44,8 @@ interface ToolResponse {
 }
 
 async function runTests() {
-  let serverProcess: ChildProcess | null = null;
-
   try {
-    // Start the MCP server with environment variables
-    serverProcess = spawn("node", ["dist/index.js"], {
-      stdio: ["pipe", "pipe", "inherit"],
-      env: cleanEnv
-    });
-
-    // Create MCP client
+    // Create MCP client with transport (this will start the server)
     const transport = new StdioClientTransport({
       command: "node",
       args: [join(__dirname, "../dist/index.js")],
@@ -103,16 +94,18 @@ async function runTests() {
     console.log("Tables in utility_go schema:", JSON.stringify(JSON.parse(listTablesSchemaResult.content[0].text), null, 2));
     console.log();
 
-    // Test 4: Get table schema
-    console.log("Test 4: Getting table schema");
+    // Test 4: Get table schemas
+    console.log("Test 4: Getting table schemas");
     const getSchemaResult = await client.callTool({
-      name: "get_table_schema",
+      name: "get_tables_schema",
       arguments: {
-        schema: "utility_go",
-        table: "users"
+        tables: [
+          { schema: "utility_go", table: "users" },
+          { schema: "utility_go", table: "events" }
+        ]
       }
     }) as ToolResponse;
-    console.log("Table schema:", JSON.stringify(JSON.parse(getSchemaResult.content[0].text), null, 2));
+    console.log("Table schemas:", JSON.stringify(JSON.parse(getSchemaResult.content[0].text), null, 2));
     console.log();
 
     // Test 5: Execute query
@@ -132,11 +125,6 @@ async function runTests() {
     console.error("Error running tests:", error);
     process.exit(1);
   } finally {
-    // Kill the server process
-    if (serverProcess) {
-      serverProcess.kill();
-    }
-    
     // Exit the process
     process.exit(0);
   }

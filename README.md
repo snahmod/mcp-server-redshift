@@ -1,27 +1,26 @@
-# MCP Server for Amazon Redshift
+# MCP Server for Redshift
 
-A Model Context Protocol (MCP) server implementation for Amazon Redshift, allowing AI models to interact with Redshift databases through a standardized interface.
+A Model Context Protocol (MCP) server implementation for Amazon Redshift, providing a standardized interface for interacting with Redshift databases through AI models.
 
 ## Features
 
-- Connect to Amazon Redshift databases
-- List tables, views, and materialized views
-- Retrieve schema information for database objects
-- Execute read-only SQL queries
-- Environment variable configuration
-- Schema filtering support
+- List tables, views, and materialized views across multiple schemas
+- Get detailed schema information for multiple tables in a single request
+- Execute read-only SQL queries against Redshift
+- Support for both stdio and SSE (Server-Sent Events) transport
+- Type-safe implementation in TypeScript
 
 ## Prerequisites
 
-- Node.js 18.x or higher
-- npm 9.x or higher
-- Access to an Amazon Redshift cluster
+- Node.js 18 or higher
+- Access to a Redshift database
+- Environment variables configured (see Configuration section)
 
 ## Installation
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/snahmod/mcp-server-redshift.git
+   git clone https://github.com/yourusername/mcp-server-redshift.git
    cd mcp-server-redshift
    ```
 
@@ -30,152 +29,109 @@ A Model Context Protocol (MCP) server implementation for Amazon Redshift, allowi
    npm install
    ```
 
-3. Create a `.env` file based on the example:
-   ```bash
-   cp .env.example .env
-   ```
-
-4. Edit the `.env` file with your Redshift connection details:
-   ```
-   REDSHIFT_HOST=your-cluster.region.redshift.amazonaws.com
-   REDSHIFT_PORT=5439
-   REDSHIFT_DATABASE=your_database
-   REDSHIFT_USER=your_username
-   REDSHIFT_PASSWORD=your_password
-   REDSHIFT_SCHEMAS=public,schema1,schema2
-   
-   # Transport configuration (optional)
-   TRANSPORT_TYPE=stdio  # or 'sse'
-   PORT=3000            # Only used with SSE transport
-   ```
-
-## Usage
-
-### Starting the Server
-
-The server supports two transport types:
-
-1. stdio (default):
-   ```bash
-   npm start
-   # or explicitly
-   TRANSPORT_TYPE=stdio npm start
-   ```
-
-2. SSE (Server-Sent Events):
-   ```bash
-   TRANSPORT_TYPE=sse PORT=3000 npm start
-   ```
-
-When using SSE transport, the server exposes two endpoints:
-- `GET /sse` - Establishes an SSE connection
-- `POST /messages` - Handles MCP messages
-
-### Testing
-
-Run the test client to verify the server functionality:
-
-```bash
-npm test
-```
-
-The test client will:
-1. Start the MCP server
-2. List all tables, views, and materialized views
-3. Get schema information for a table
-4. Get schema information for a view (if available)
-5. Execute a count query on a table
-6. Execute a simple query
-
-### Building
-
-Build the TypeScript code:
-
-```bash
-npm run build
-```
-
-## Using with MCP
-
-This server can be used with any MCP-compatible client, including AI assistants like Claude. To use it:
-
-1. Build the server:
+3. Build the project:
    ```bash
    npm run build
    ```
 
-2. Set up your environment variables in `.env`
+## Configuration
 
-3. Start the server:
+Create a `.env` file in the root directory with the following variables:
+
+```env
+# Redshift Connection
+REDSHIFT_HOST=your-redshift-host
+REDSHIFT_PORT=5439
+REDSHIFT_DATABASE=your-database
+REDSHIFT_USER=your-username
+REDSHIFT_PASSWORD=your-password
+REDSHIFT_SCHEMAS=public,schema1,schema2  # Comma-separated list of schemas
+
+# Server Configuration
+TRANSPORT_TYPE=stdio  # or 'sse' for Server-Sent Events
+PORT=3000  # Only used when TRANSPORT_TYPE=sse
+```
+
+## Usage
+
+### Running the Server
+
+```bash
+# Development
+npm run dev
+
+# Production
+npm run build
+npm start
+```
+
+### Available Tools
+
+1. **List Tables** (`list_tables`)
+   - Lists all tables, views, and materialized views in specified schemas
+   - Optional `schemas` parameter to filter by specific schemas
+   ```json
+   {
+     "schemas": ["public", "analytics"]
+   }
+   ```
+
+2. **Get Tables Schema** (`get_tables_schema`)
+   - Get schema information for multiple tables across different schemas
+   ```json
+   {
+     "tables": [
+       { "schema": "public", "table": "users" },
+       { "schema": "analytics", "table": "events" }
+     ]
+   }
+   ```
+
+3. **Query** (`query`)
+   - Execute read-only SQL queries against the database
+   ```json
+   {
+     "sql": "SELECT * FROM public.users LIMIT 5"
+   }
+   ```
+
+### Testing
+
+Run the test suite:
    ```bash
-   npm start
+   npm test
    ```
 
-4. Connect to the server using an MCP client. The server will provide access to database resources and the query tool.
+## Architecture
 
-### Example MCP Interactions
+The project is organized into the following structure:
 
-1. List all tables and views:
-   ```json
-   {
-     "type": "list_resources",
-     "params": {}
-   }
-   ```
+```
+src/
+├── config/         # Configuration and database setup
+├── tools/          # Individual tool implementations
+├── server/         # Server setup and transport configuration
+└── index.ts        # Main entry point
+```
 
-2. Get table schema:
-   ```json
-   {
-     "type": "read_resource",
-     "params": {
-       "uri": "redshift://your-cluster/schema/table"
-     }
-   }
-   ```
+## Security Considerations
 
-3. Execute a query:
-   ```json
-   {
-     "type": "call_tool",
-     "params": {
-       "name": "query",
-       "arguments": {
-         "sql": "SELECT * FROM schema.table LIMIT 5"
-       }
-     }
-   }
-   ```
-
-## Development
-
-### Project Structure
-
-- `src/` - Source code
-  - `index.ts` - Main server implementation
-  - `types.ts` - TypeScript type definitions
-- `test/` - Test files
-  - `client.ts` - Test client for verifying server functionality
-- `dist/` - Compiled JavaScript code (generated)
-
-### Adding New Features
-
-1. Implement new functionality in `src/index.ts`
-2. Add appropriate tests in `test/client.ts`
-3. Update documentation in `README.md`
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- All queries are executed in read-only transactions
+- Environment variables should be properly secured
+- CORS is enabled for SSE transport (should be configured for production)
+- Database credentials should be managed securely
 
 ## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
